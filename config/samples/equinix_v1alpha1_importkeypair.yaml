@@ -1,0 +1,7 @@
+apiVersion: equinix.cattle.io/v1alpha1
+kind: ImportKeyPair
+metadata:
+  name: importkeypair-sample
+spec:
+  # Add fields here
+  foo: bar
