@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -29,22 +30,22 @@ type InstanceSpec struct {
 	Facility              []string          `json:"facility,omitempty"`
 	Metro                 string            `json:"metro,omitempty"`
 	OS                    string            `json:"operating_system"`
-	BillingCycle          string            `json:"billing_cycle"`
-	ProjectID             string            `json:"project_id"`
-	UserData              string            `json:"userdata"`
-	Tags                  []string          `json:"tags"`
+	BillingCycle          string            `json:"billingCycle"`
+	ProjectID             string            `json:"projectID,omitempty"`
+	UserData              string            `json:"userdata,omitempty"`
+	Tags                  []string          `json:"tags,omitempty"`
 	Description           string            `json:"description,omitempty"`
-	IPXEScriptURL         string            `json:"ipxe_script_url,omitempty"`
-	PublicIPv4SubnetSize  int               `json:"public_ipv4_subnet_size,omitempty"`
-	AlwaysPXE             bool              `json:"always_pxe,omitempty"`
-	HardwareReservationID string            `json:"hardware_reservation_id,omitempty"`
-	SpotInstance          bool              `json:"spot_instance,omitempty"`
-	SpotPriceMax          float64           `json:"spot_price_max,omitempty,string"`
-	CustomData            string            `json:"customdata,omitempty"`
-	UserSSHKeys           []string          `json:"user_ssh_keys,omitempty"`
-	ProjectSSHKeys        []string          `json:"project_ssh_keys,omitempty"`
+	IPXEScriptURL         string            `json:"ipxeScriptUrl,omitempty"`
+	PublicIPv4SubnetSize  int               `json:"publicIPv4SubnetSize,omitempty"`
+	AlwaysPXE             bool              `json:"alwaysPxe,omitempty"`
+	HardwareReservationID string            `json:"hardwareReservation_id,omitempty"`
+	SpotInstance          bool              `json:"spotInstance,omitempty"`
+	SpotPriceMax          resource.Quantity `json:"spotPriceMax,omitempty,string"`
+	CustomData            string            `json:"customData,omitempty"`
+	UserSSHKeys           []string          `json:"usersshKeys,omitempty"`
+	ProjectSSHKeys        []string          `json:"projectsshKeys,omitempty"`
 	Features              map[string]string `json:"features,omitempty"`
-	NoSSHKeys             bool              `json:"no_ssh_keys,omitempty"`
+	NoSSHKeys             bool              `json:"nosshKeys,omitempty"`
 	Secret                string            `json:"credentialSecret"`
 }
 
@@ -62,7 +63,6 @@ type InstanceStatus struct {
 //+kubebuilder:printcolumn:name="PrivateIP",type="string",JSONPath=`.status.privateIP`
 //+kubebuilder:printcolumn:name="Status",type="string",JSONPath=`.status.status`
 
-// Instance is the Schema for the instances API
 type Instance struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

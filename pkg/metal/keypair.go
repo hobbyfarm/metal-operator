@@ -1,6 +1,9 @@
 package metal
 
 import (
+	"fmt"
+	"strings"
+
 	equinixv1alpha1 "github.com/hobbyfarm/metal-operator/pkg/api/v1alpha1"
 	"github.com/packethost/packngo"
 )
@@ -17,7 +20,6 @@ func (m *MetalClient) createKeyPair(sshCreateRequest *packngo.SSHKeyCreateReques
 }
 
 func (m *MetalClient) DeleteKeyPair(importKeyPair *equinixv1alpha1.ImportKeyPair) (err error) {
-
 	ok, err := m.importKeyPairExists(importKeyPair.Status.KeyPairID)
 	if err != nil {
 		return err
@@ -35,12 +37,9 @@ func (m *MetalClient) DeleteKeyPair(importKeyPair *equinixv1alpha1.ImportKeyPair
 
 func (m *MetalClient) CreateImportKeyPair(importKeyPair *equinixv1alpha1.ImportKeyPair) (status *equinixv1alpha1.ImportKeyPairStatus, err error) {
 	status = importKeyPair.Status.DeepCopy()
-	if status.Status != "" {
-		status.Status = "created"
-		return status, err
-	}
 
-	keyPairID, err := m.createKeyPair(&importKeyPair.Spec.SSHKeyCreateRequest)
+	sshReq := m.generateSSHKeyRequest(importKeyPair)
+	keyPairID, err := m.createKeyPair(sshReq)
 	if err != nil {
 		return status, err
 	}
@@ -50,16 +49,26 @@ func (m *MetalClient) CreateImportKeyPair(importKeyPair *equinixv1alpha1.ImportK
 }
 
 func (m *MetalClient) importKeyPairExists(keyPairID string) (ok bool, err error) {
-	sshKeys, _, err := m.SSHKeys.List()
+	sshKey, _, err := m.SSHKeys.Get(keyPairID, nil)
 	if err != nil {
-		return ok, err
-	}
-
-	for _, sshKey := range sshKeys {
-		if sshKey.ID == keyPairID {
-			ok = true
+		if strings.Contains(err.Error(), "404 Not found") {
 			return ok, nil
+		} else {
+			return ok, err
 		}
 	}
-	return ok, err
+
+	if sshKey.ID == keyPairID {
+		ok = true
+	}
+	return ok, nil
+}
+
+func (m *MetalClient) generateSSHKeyRequest(importKeyPair *equinixv1alpha1.ImportKeyPair) (sshReq *packngo.SSHKeyCreateRequest) {
+	sshReq = &packngo.SSHKeyCreateRequest{}
+	sshReq.ProjectID = m.ProjectID
+	sshReq.Key = importKeyPair.Spec.Key
+	sshReq.Label = fmt.Sprintf("%s-%s", importKeyPair.Name, importKeyPair.Namespace)
+
+	return sshReq
 }

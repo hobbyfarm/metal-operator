@@ -62,14 +62,14 @@ func (m *MetalClient) generateDeviceCreationRequest(instance *equinixv1alpha1.In
 		Plan:                  instance.Spec.Plan,
 		Facility:              instance.Spec.Facility,
 		Metro:                 instance.Spec.Metro,
-		ProjectID:             m.ProjectID,
+		ProjectID:             instance.Spec.ProjectID,
 		AlwaysPXE:             instance.Spec.AlwaysPXE,
 		Tags:                  instance.Spec.Tags,
 		Description:           instance.Spec.Description,
 		PublicIPv4SubnetSize:  instance.Spec.PublicIPv4SubnetSize,
 		HardwareReservationID: instance.Spec.HardwareReservationID,
 		SpotInstance:          instance.Spec.SpotInstance,
-		SpotPriceMax:          instance.Spec.SpotPriceMax,
+		SpotPriceMax:          instance.Spec.SpotPriceMax.AsApproximateFloat64(),
 		CustomData:            instance.Spec.CustomData,
 		UserSSHKeys:           instance.Spec.UserSSHKeys,
 		ProjectSSHKeys:        instance.Spec.ProjectSSHKeys,
@@ -80,6 +80,9 @@ func (m *MetalClient) generateDeviceCreationRequest(instance *equinixv1alpha1.In
 		IPXEScriptURL:         instance.Spec.IPXEScriptURL,
 	}
 
+	if dsr.ProjectID == "" {
+		dsr.ProjectID = m.ProjectID
+	}
 	return dsr
 }
 
@@ -101,13 +104,34 @@ func (m *MetalClient) CheckDeviceStatus(instance *equinixv1alpha1.Instance) (sta
 
 func (m *MetalClient) DeleteDevice(instance *equinixv1alpha1.Instance) (err error) {
 
-	if instance.Status.Status != "deleted" {
+	ok, err := m.deviceExists(instance.Status.InstanceID)
+	if err != nil {
+		return err
+	}
+
+	// device exists. terminate the same.
+	if ok {
 		_, err = m.Devices.Delete(instance.Status.InstanceID, true)
-		if err != nil {
-			return err
+		return err
+	}
+
+	// device doesnt exist.. ignore object
+	return nil
+}
+
+func (m *MetalClient) deviceExists(instanceID string) (ok bool, err error) {
+	devices, _, err := m.Devices.List(m.ProjectID, nil)
+	if err != nil {
+		return ok, err
+	}
+
+	for _, device := range devices {
+		if device.ID == instanceID {
+			ok = true
+			return ok, nil
 		}
 	}
 
-	instance.Status.Status = "deleted"
-	return nil
+	return ok, nil
+
 }

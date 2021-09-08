@@ -65,11 +65,12 @@ func (r *ImportKeyPairReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	if importKeyPair.ObjectMeta.DeletionTimestamp.IsZero() {
 		status := importKeyPair.Status.DeepCopy()
-
+		newStatus := &equinixv1alpha1.ImportKeyPairStatus{}
 		switch status.Status {
 		case "":
 			// create keypair
-			status, err = mClient.CreateImportKeyPair(importKeyPair)
+			log.Info("creating keypair", importKeyPair.Name, importKeyPair.Namespace)
+			newStatus, err = mClient.CreateImportKeyPair(importKeyPair)
 		case "created":
 			return ctrl.Result{}, nil
 		}
@@ -78,8 +79,8 @@ func (r *ImportKeyPairReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 			return ctrl.Result{}, err
 		}
 
-		importKeyPair.Status = *status
-		// always requeue since the processing ends in the switch block
+		importKeyPair.Status = *newStatus
+		// requeue  always since the processing ends in the switch block
 		requeue = true
 		controllerutil.AddFinalizer(importKeyPair, instanceFinalizer)
 	} else {

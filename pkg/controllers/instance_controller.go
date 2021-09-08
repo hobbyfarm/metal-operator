@@ -68,14 +68,14 @@ func (r *InstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	if instance.ObjectMeta.DeletionTimestamp.IsZero() {
 		// instance provisioning //
 		status := instance.Status.DeepCopy()
-
+		newStatus := &equinixv1alpha1.InstanceStatus{}
 		switch status.Status {
 		case "":
 			// need to provision
-			status, err = mClient.CreateNewDevice(instance)
+			newStatus, err = mClient.CreateNewDevice(instance)
 		case "queued":
 			// need to check if device is active
-			status, err = mClient.CheckDeviceStatus(instance)
+			newStatus, err = mClient.CheckDeviceStatus(instance)
 		case "active":
 			// provisioning complete, update status and ignore
 			return ctrl.Result{}, nil
@@ -84,7 +84,7 @@ func (r *InstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		if err != nil {
 			return ctrl.Result{}, err
 		}
-		instance.Status = *status
+		instance.Status = *newStatus
 		requeue = true
 		controllerutil.AddFinalizer(instance, instanceFinalizer)
 	} else {

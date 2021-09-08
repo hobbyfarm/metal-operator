@@ -17,7 +17,6 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"github.com/packethost/packngo"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -26,7 +25,7 @@ import (
 
 // ImportKeyPairSpec defines the desired state of ImportKeyPair
 type ImportKeyPairSpec struct {
-	packngo.SSHKeyCreateRequest
+	Key    string `json:"key"`
 	Secret string `json:"secret"`
 }
 
@@ -37,9 +36,8 @@ type ImportKeyPairStatus struct {
 }
 
 //+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+//+kubebuilder:printcolumn:name="KeyPairID",type="string",JSONPath=`.status.keyPairID`
 
-// ImportKeyPair is the Schema for the importkeypairs API
 type ImportKeyPair struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
