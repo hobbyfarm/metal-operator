@@ -1,0 +1,8 @@
+apiVersion: equinix.cattle.io/v1alpha1
+kind: ImportKeyPair
+metadata:
+  name: importkeypair-sample
+spec:
+  # Add fields here
+  key: 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDF6c8PcOyIUSELn2RtiRx+9FIvw0siU7qpvkg94uLA4qscs3CUXIOjfQkt/3UdVf2KmM/YMbBeTVAoCu6PQ7lsFtXijvldVF+S11YYB2Fz8r9VYPYnpgTurxc3UcDtPC4OYUGJYlG5n7ddPOWAHjc6ZY5hcvilxLioFWHpMUGAKTeS6AWJ1fb6MW4iw/xXsb3evM4rEgTX4ya3uzW6HFOz5pI5yD3oN7LTTaRBI6aaUblLJ6HIfbyoL/IAs4SkF1qpqtcKkurkpmVHgShPc+WCtkofzhmS2UZK/a/ztAHkJ8ny1UNXodeCMF7FCQN10rZr2VUggb6i1B9RGHnK7BJv'
+  secret: equnix-metal

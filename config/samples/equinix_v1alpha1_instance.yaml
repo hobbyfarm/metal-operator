@@ -1,0 +1,16 @@
+apiVersion: equinix.cattle.io/v1alpha1
+kind: Instance
+metadata:
+  name: instance-sample
+spec:
+  # Add fields here
+  plan: c3.small.x86
+  credentialSecret: equnix-metal
+  facility: 
+    - sy4
+  operatingSystem: "custom_ipxe"
+  billingCycle: "hourly"
+  ipxeScriptUrl: "https://raw.githubusercontent.com/ibrokethecloud/custom_pxe/master/shell.ipxe"
+  projectsshKeys: 
+    - bf389b19-2fcf-4f02-9a6f-939e7482c821
+
