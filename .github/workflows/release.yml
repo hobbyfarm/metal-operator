@@ -1,0 +1,81 @@
+on:
+  push:
+    # Sequence of patterns matched against refs/tags\
+    tags:
+    - "v*"
+
+name: Create Release
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - id: get_version
+        uses: battila7/get-version-action@v2.0.0
+
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v2
+        with:
+          go-version: ^1.13
+        id: go
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ github.repository}}:${{ steps.get_version.outputs.version }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Package and release chart
+        run: |
+          OWNER=${GITHUB_REPOSITORY%%/*}
+          REPO=${GITHUB_REPOSITORY#*/}
+
+          docker run -v $PWD:/app alpine/helm:3.0.0 package /app/chart/metal-operator --app-version ${{ steps.get_version.outputs.version }} --version ${{ steps.get_version.outputs.version }} -d /app/dist
+          docker run -v $PWD:/app quay.io/helmpack/chart-releaser:v0.2.3 cr upload --owner $OWNER --git-repo $REPO --package-path /app/dist --token ${{ secrets.GITHUB_TOKEN }}
+          docker run -v $PWD:/app quay.io/helmpack/chart-releaser:v0.2.3 cr index  --owner $OWNER --git-repo $REPO --package-path /app/dist --charts-repo https://$OWNER.github.io/$REPO --index-path /app/docs/index.yaml
+
+      - name: commit updated index.yaml
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "update index.yaml" -a
+      
+      - name: push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
