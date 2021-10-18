@@ -1,0 +1,13 @@
+apiVersion: v1
+entries:
+  metal-operator:
+  - apiVersion: v2
+    appVersion: v0.1.0-rc1
+    created: "2021-10-18T04:03:59.811625033Z"
+    description: A Helm chart for Kubernetes
+    digest: 2b49e4e2c6613e422b774fce24fae9485383730f6ed7543160684ca3c76eac78
+    name: metal-operator
+    urls:
+    - https://github.com/hobbyfarm/metal-operator/releases/download/metal-operator-v0.1.0-rc1/metal-operator-v0.1.0-rc1.tgz
+    version: v0.1.0-rc1
+generated: "2021-10-18T04:03:59.641498804Z"
