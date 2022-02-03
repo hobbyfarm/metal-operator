@@ -74,7 +74,7 @@ spec:
                 type: string
               nosshKeys:
                 type: boolean
-              operating_system:
+              operatingSystem:
                 type: string
               plan:
                 type: string
@@ -107,7 +107,7 @@ spec:
             required:
             - billingCycle
             - credentialSecret
-            - operating_system
+            - operatingSystem
             - plan
             type: object
           status:
