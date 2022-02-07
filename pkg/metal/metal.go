@@ -53,7 +53,6 @@ func NewClient(ctx context.Context, client client.Client, secret string, namespa
 func (m *MetalClient) CreateElasticInterface(instance *equinixv1alpha1.Instance) (status *equinixv1alpha1.InstanceStatus, err error) {
 	status = instance.Status.DeepCopy()
 	tag := fmt.Sprintf("%s-%s", instance.Name, instance.Namespace)
-	tag = "instance-sample-hobbyfarm"
 	var found bool
 	var reservationID string
 	var elasticIP string
@@ -121,6 +120,7 @@ func (m *MetalClient) CreateNewDevice(instance *equinixv1alpha1.Instance) (statu
 
 	status.InstanceID = device.ID
 	status.Status = device.State
+	status.Facility = device.Facility.Code
 	return status, err
 }
 
@@ -146,6 +146,7 @@ func (m *MetalClient) generateDeviceCreationRequest(instance *equinixv1alpha1.In
 		OS:                    instance.Spec.OS,
 		BillingCycle:          instance.Spec.BillingCycle,
 		IPXEScriptURL:         instance.Spec.IPXEScriptURL,
+		UserData:              instance.Spec.UserData,
 	}
 
 	if dsr.ProjectID == "" {

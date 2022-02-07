@@ -55,12 +55,14 @@ type InstanceStatus struct {
 	InstanceID string `json:"instanceID"`
 	PublicIP   string `json:"publicIP"`
 	PrivateIP  string `json:"privateIP"`
+	Facility   string `json:"facility"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:printcolumn:name="InstanceId",type="string",JSONPath=`.status.instanceID`
 //+kubebuilder:printcolumn:name="PublicIP",type="string",JSONPath=`.status.publicIP`
 //+kubebuilder:printcolumn:name="PrivateIP",type="string",JSONPath=`.status.privateIP`
+//+kubebuilder:printcolumn:name="Facility",type="string",JSONPath=`.status.facility`
 //+kubebuilder:printcolumn:name="Status",type="string",JSONPath=`.status.status`
 
 type Instance struct {
