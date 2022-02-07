@@ -29,7 +29,7 @@ type InstanceSpec struct {
 	Plan                  string            `json:"plan"`
 	Facility              []string          `json:"facility,omitempty"`
 	Metro                 string            `json:"metro,omitempty"`
-	OS                    string            `json:"operating_system"`
+	OS                    string            `json:"operatingSystem"`
 	BillingCycle          string            `json:"billingCycle"`
 	ProjectID             string            `json:"projectID,omitempty"`
 	UserData              string            `json:"userdata,omitempty"`
@@ -55,12 +55,14 @@ type InstanceStatus struct {
 	InstanceID string `json:"instanceID"`
 	PublicIP   string `json:"publicIP"`
 	PrivateIP  string `json:"privateIP"`
+	Facility   string `json:"facility"`
 }
 
 //+kubebuilder:object:root=true
 //+kubebuilder:printcolumn:name="InstanceId",type="string",JSONPath=`.status.instanceID`
 //+kubebuilder:printcolumn:name="PublicIP",type="string",JSONPath=`.status.publicIP`
 //+kubebuilder:printcolumn:name="PrivateIP",type="string",JSONPath=`.status.privateIP`
+//+kubebuilder:printcolumn:name="Facility",type="string",JSONPath=`.status.facility`
 //+kubebuilder:printcolumn:name="Status",type="string",JSONPath=`.status.status`
 
 type Instance struct {

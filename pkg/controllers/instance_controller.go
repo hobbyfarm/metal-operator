@@ -72,11 +72,23 @@ func (r *InstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		switch status.Status {
 		case "":
 			// need to provision
+			log.Info("provisioning elastic ip")
+			newStatus, err = mClient.CreateElasticInterface(instance)
+		case "elasticipcreated":
+			// after elastic ip is provisioned we wait until the VM controller updates the status
+			// this will ensure that the cloudInit is patched with correct VIP arguments
+			// before the node is actually provisioned.
+			log.Info("elastic ip provisioned.. waiting for vm controller to patch object")
+			return ctrl.Result{}, nil
+		case "patched":
+			log.Info("provisioning metal device")
 			newStatus, err = mClient.CreateNewDevice(instance)
 		case "queued":
 			// need to check if device is active
+			log.Info("checking device status")
 			newStatus, err = mClient.CheckDeviceStatus(instance)
 		case "active":
+			log.Info("device provisioning completed")
 			// provisioning complete, update status and ignore
 			return ctrl.Result{}, nil
 		}
@@ -89,6 +101,7 @@ func (r *InstanceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		controllerutil.AddFinalizer(instance, instanceFinalizer)
 	} else {
 		// handle termination of hardware //
+		log.Info("cleaning up instance")
 		err = mClient.DeleteDevice(instance)
 		if err != nil {
 			return ctrl.Result{}, err
