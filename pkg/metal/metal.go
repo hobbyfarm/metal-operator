@@ -106,7 +106,17 @@ func (m *MetalClient) CreateElasticInterface(instance *equinixv1alpha1.Instance)
 		instance.Annotations[ReservationAnnotation] = reservation.ID
 		instance.Annotations[AddressAnnotation] = reservation.Address
 	}
-	status.Status = "elasticipcreated"
+
+	// instances need to be patched by hf-shim-operator.
+	// to make testing easier, we should be able to check if object contains annotation
+	// "waitforpatching". This is injected by objects created by hf-shim-operator.
+	// if not present then the object can go to patched state and complete provisionining
+	if _, ok := instance.Annotations["waitforpatching"]; ok {
+		status.Status = "elasticipcreated"
+	} else {
+		status.Status = "patched"
+	}
+
 	return status, nil
 }
 
@@ -163,11 +173,15 @@ func (m *MetalClient) CheckDeviceStatus(instance *equinixv1alpha1.Instance) (sta
 	}
 
 	if deviceStatus.State == "active" {
-		// attach elastic IP //
-		_, _, err := m.Client.DeviceIPs.Assign(status.InstanceID, &packngo.AddressStruct{
-			Address: instance.Annotations[AddressAnnotation],
-		})
 
+		// check and attach EIP if needed
+		err = m.checkAndAttachElasticIP(instance, deviceStatus)
+		if err != nil {
+			return status, err
+		}
+
+		// perform network conversion
+		err = m.UpdateNetworkConfig(instance, deviceStatus)
 		if err != nil {
 			return status, err
 		}
@@ -225,4 +239,154 @@ func (m *MetalClient) deviceExists(instanceID string) (ok bool, err error) {
 
 	return ok, nil
 
+}
+
+func (m *MetalClient) UpdateNetworkConfig(instance *equinixv1alpha1.Instance, device *packngo.Device) error {
+
+	if instance.Spec.NetworkType == "" {
+		// no actual network reconfig is needed
+		return nil
+	}
+
+	err := m.ConvertDevice(device, instance.Spec.NetworkType)
+	if err != nil {
+		return err
+	}
+
+	// apply VLANS
+	for netInterface, VlanIDS := range instance.Spec.VLANAttachments {
+		port, err := device.GetPortByName(netInterface)
+		if err != nil {
+			return err
+		}
+
+		for _, vlan := range VlanIDS {
+			_, _, err = m.Client.Ports.Assign(port.ID, vlan)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// ConvertDevice is fork from Packngo ConvertDevice. Changed to use non deprecated port service
+// methods
+func (m *MetalClient) ConvertDevice(d *packngo.Device, targetType string) error {
+	bondPorts := d.GetBondPorts()
+	allEthPorts := d.GetPhysicalPorts()
+
+	bond0Port := bondPorts["bond0"]
+	var oddEthPorts []packngo.Port
+	for _, portName := range []string{"eth1", "eth3", "eth5", "eth7", "eth9"} {
+		if ethPort, ok := allEthPorts[portName]; ok {
+			oddEthPorts = append(oddEthPorts, *ethPort)
+		}
+
+	}
+
+	if targetType == "layer3" {
+		// TODO: remove vlans from all the ports
+		for _, p := range bondPorts {
+			_, _, err := m.Client.Ports.Bond(p.ID, false)
+			if err != nil {
+				return err
+			}
+		}
+
+		_, _, err := m.Client.Ports.ConvertToLayerThree(bond0Port.ID, []packngo.AddressRequest{
+			{AddressFamily: 4, Public: true},
+			{AddressFamily: 4, Public: false},
+			{AddressFamily: 6, Public: true},
+		})
+
+		if err != nil {
+			return err
+		}
+
+		for _, p := range allEthPorts {
+			_, _, err := m.Client.Ports.Bond(p.ID, false)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	if targetType == "hybrid" {
+		// ports need to be refreshed before bonding/disbonding
+		for _, p := range oddEthPorts {
+			if p.DisbondOperationSupported {
+				_, _, err := m.Client.Ports.Disbond(p.ID, false)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	if targetType == "layer2-individual" {
+		_, _, err := m.Client.Ports.ConvertToLayerTwo(bond0Port.ID)
+		if err != nil {
+			return err
+		}
+		for _, p := range allEthPorts {
+			if p.DisbondOperationSupported {
+				_, _, err = m.Client.Ports.Disbond(p.ID, true)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
+	}
+
+	if targetType == "layer2-bonded" {
+
+		for _, p := range bondPorts {
+			_, _, err := m.Client.Ports.ConvertToLayerTwo(p.ID)
+			if err != nil {
+				return err
+			}
+		}
+		for _, p := range allEthPorts {
+			_, _, err := m.Client.Ports.Bond(p.ID, false)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+
+	if targetType == "hybrid-bonded" {
+		// nothing needs to be done. VLANS are just applied to bond0 interface
+		return nil
+	}
+
+	return fmt.Errorf("invalid network type %s in instance", targetType)
+}
+
+func (m *MetalClient) checkAndAttachElasticIP(instance *equinixv1alpha1.Instance, device *packngo.Device) error {
+	var additionalAttachment bool
+	for _, network := range device.Network {
+		// public ips which are not management are elastic ips
+		if network.IpAddressCommon.Public == true && network.IpAddressCommon.Management == false {
+			additionalAttachment = true
+		}
+	}
+
+	if additionalAttachment {
+		// nothing else to do.. device already has an EIP
+		return nil
+	}
+
+	// perform EIP attachment
+	_, _, err := m.Client.DeviceIPs.Assign(instance.Status.InstanceID, &packngo.AddressStruct{
+		Address: instance.Annotations[AddressAnnotation],
+	})
+
+	return err
 }

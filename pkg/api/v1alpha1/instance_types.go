@@ -26,27 +26,29 @@ import (
 
 // InstanceSpec defines the desired state of Instance
 type InstanceSpec struct {
-	Plan                  string            `json:"plan"`
-	Facility              []string          `json:"facility,omitempty"`
-	Metro                 string            `json:"metro,omitempty"`
-	OS                    string            `json:"operatingSystem"`
-	BillingCycle          string            `json:"billingCycle"`
-	ProjectID             string            `json:"projectID,omitempty"`
-	UserData              string            `json:"userdata,omitempty"`
-	Tags                  []string          `json:"tags,omitempty"`
-	Description           string            `json:"description,omitempty"`
-	IPXEScriptURL         string            `json:"ipxeScriptUrl,omitempty"`
-	PublicIPv4SubnetSize  int               `json:"publicIPv4SubnetSize,omitempty"`
-	AlwaysPXE             bool              `json:"alwaysPxe,omitempty"`
-	HardwareReservationID string            `json:"hardwareReservation_id,omitempty"`
-	SpotInstance          bool              `json:"spotInstance,omitempty"`
-	SpotPriceMax          resource.Quantity `json:"spotPriceMax,omitempty,string"`
-	CustomData            string            `json:"customData,omitempty"`
-	UserSSHKeys           []string          `json:"usersshKeys,omitempty"`
-	ProjectSSHKeys        []string          `json:"projectsshKeys,omitempty"`
-	Features              map[string]string `json:"features,omitempty"`
-	NoSSHKeys             bool              `json:"nosshKeys,omitempty"`
-	Secret                string            `json:"credentialSecret"`
+	Plan                  string              `json:"plan"`
+	Facility              []string            `json:"facility,omitempty"`
+	Metro                 string              `json:"metro,omitempty"`
+	OS                    string              `json:"operatingSystem"`
+	BillingCycle          string              `json:"billingCycle"`
+	ProjectID             string              `json:"projectID,omitempty"`
+	UserData              string              `json:"userdata,omitempty"`
+	Tags                  []string            `json:"tags,omitempty"`
+	Description           string              `json:"description,omitempty"`
+	IPXEScriptURL         string              `json:"ipxeScriptUrl,omitempty"`
+	PublicIPv4SubnetSize  int                 `json:"publicIPv4SubnetSize,omitempty"`
+	AlwaysPXE             bool                `json:"alwaysPxe,omitempty"`
+	HardwareReservationID string              `json:"hardwareReservation_id,omitempty"`
+	SpotInstance          bool                `json:"spotInstance,omitempty"`
+	SpotPriceMax          resource.Quantity   `json:"spotPriceMax,omitempty,string"`
+	CustomData            string              `json:"customData,omitempty"`
+	UserSSHKeys           []string            `json:"usersshKeys,omitempty"`
+	ProjectSSHKeys        []string            `json:"projectsshKeys,omitempty"`
+	Features              map[string]string   `json:"features,omitempty"`
+	NoSSHKeys             bool                `json:"nosshKeys,omitempty"`
+	Secret                string              `json:"credentialSecret"`
+	NetworkType           string              `json:"networkType,omitempty"`
+	VLANAttachments       map[string][]string `json:"vlanAttachments,omitempty"`
 }
 
 // InstanceStatus defines the observed state of Instance

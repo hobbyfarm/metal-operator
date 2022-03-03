@@ -75,6 +75,8 @@ spec:
                 type: string
               metro:
                 type: string
+              networkType:
+                type: string
               nosshKeys:
                 type: boolean
               operatingSystem:
@@ -107,6 +109,12 @@ spec:
                 items:
                   type: string
                 type: array
+              vlanAttachments:
+                additionalProperties:
+                  items:
+                    type: string
+                  type: array
+                type: object
             required:
             - billingCycle
             - credentialSecret
