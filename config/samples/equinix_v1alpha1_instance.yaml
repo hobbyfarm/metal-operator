@@ -10,3 +10,8 @@ spec:
   operatingSystem: "custom_ipxe"
   billingCycle: "hourly"
   ipxeScriptUrl: "https://raw.githubusercontent.com/ibrokethecloud/custom_pxe/master/shell.ipxe"
+  vlanAttachments:
+    bond0:
+      - "100"
+      - "1000"
+  networkType: "hybrid-bonded"
