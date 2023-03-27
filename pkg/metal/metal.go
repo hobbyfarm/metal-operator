@@ -153,7 +153,7 @@ func (m *MetalClient) generateDeviceCreationRequest(instance *equinixv1alpha1.In
 		ProjectSSHKeys:        instance.Spec.ProjectSSHKeys,
 		Features:              instance.Spec.Features,
 		NoSSHKeys:             instance.Spec.NoSSHKeys,
-		OS:                    instance.Spec.OS,
+		OS:                    instance.Spec.OperatingSystem,
 		BillingCycle:          instance.Spec.BillingCycle,
 		IPXEScriptURL:         instance.Spec.IPXEScriptURL,
 		UserData:              instance.Spec.UserData,
