@@ -29,7 +29,7 @@ type InstanceSpec struct {
 	Plan                  string              `json:"plan"`
 	Facility              []string            `json:"facility,omitempty"`
 	Metro                 string              `json:"metro,omitempty"`
-	OS                    string              `json:"operatingSystem"`
+	OperatingSystem       string              `json:"operatingSystem"`
 	BillingCycle          string              `json:"billingCycle"`
 	ProjectID             string              `json:"projectID,omitempty"`
 	UserData              string              `json:"userdata,omitempty"`
